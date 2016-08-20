@@ -28,15 +28,12 @@ var Player = function(x,y,ctrls){
 	this.pos = new Vector2d(x,y); // position of head centre
 	this.vel = new Vector2d(0,0);
 	this.acc = new Vector2d(0,0);
-	this.headSize = 40; 
-	this.bod
+	this.headSize = 40;
 	this.init(x,y,ctrls);
 };
 
 Player.prototype.init = function(x,y,ctrls) {
 	this.ctrls = ctrls;
-	console.log(this.ctrls);
-	console.log(typeof(this.ctrls))
 	this.upPress = false;
 	this.downPress = false;
 	this.leftPress = false;
@@ -73,11 +70,11 @@ Player.prototype.draw = function() {
 };
 
 Player.prototype.update = function() {
-	if (this.pos.y < 900 - this.headSize*3.7){
-		this.acc.y = 1;
+	if (this.pos.y < canvas.height - this.headSize*3.7){
+		this.acc.y = 1.5;
 		this.canJump = false;
 	} else {
-		this.pos.y = 900 - this.headSize*3.7;
+		this.pos.y = canvas.height - this.headSize*3.7;
 		this.acc.y = 0;
 		this.vel.y = 0;
 		this.canJump = true;
@@ -85,17 +82,17 @@ Player.prototype.update = function() {
 
 	if (this.rightPress && !this.leftPress) {
 		if (Math.sign(this.vel.x) == -1){
-			this.acc.x = 2;
+			this.acc.x = 2.5;
 		} else {
 			this.acc.x = 1;
 		}
 	} else if (this.leftPress && !this.rightPress) {
 		if (Math.sign(this.vel.x) == 1){
-			this.acc.x = -2;
+			this.acc.x = -2.5;
 		} else {
 			this.acc.x = -1;
 		}
-	} else if (Math.abs(this.vel.x) > 0) {
+	} else if (Math.abs(this.vel.x) > 1) {
 		this.acc.x = -Math.sign(this.vel.x)*2;
 	} else {
 		this.acc.x = 0;
@@ -116,12 +113,63 @@ Player.prototype.update = function() {
 
 	if (this.pos.x - this.headSize < 0) {
 		this.pos.x = 0 + this.headSize;
-		this.vel.x = 0;
+		this.vel.x = -0.5*this.vel.x;
 		this.acc.x = 0;
-	} else if (this.pos.x + this.headSize > 1600) {
-		this.pos.x = 1600 - this.headSize;
-		this.vel.x = 0;
+	} else if (this.pos.x + this.headSize > canvas.width) {
+		this.pos.x = canvas.width - this.headSize;
+		this.vel.x = -0.5*this.vel.x;
 		this.acc.x = 0;
+	}
+
+	this.pos.add(this.vel);
+	this.vel.add(this.acc);
+};
+
+
+
+var Ball = function(x,y){
+	this.pos = new Vector2d(x,y); // position of head centre
+	this.vel = new Vector2d(0,0);
+	this.acc = new Vector2d(0,0);
+	this.size = 30; 
+	this.init(x,y);
+};
+
+Ball.prototype.init = function(x,y) {
+	this.pos.set(x,y);
+	this.vel.set(0,0);
+	this.elast = 0.7;
+};
+
+Ball.prototype.draw = function() {
+	ctx.beginPath();
+	ctx.arc(this.pos.x, 
+			this.pos.y, 
+			this.size, 
+			0, Math.PI*2);
+	ctx.fillStyle = '#000000';
+	ctx.fill();
+	ctx.closePath();
+};
+
+Ball.prototype.update = function() {
+	if (this.pos.y < canvas.height - this.size*1.1){
+		this.acc.y = 1.5;
+	} else if (this.pos.y) {
+		this.pos.y = canvas.height - this.size;
+		this.acc.y = 1.5;
+		this.vel.y = -this.elast*this.vel.y;
+	}
+
+
+	if (this.pos.x - this.size < 0) {
+		this.pos.x = 0 + this.size;
+		this.vel.x = -0.8*this.vel.x;
+		this.acc.x = -this.acc.x;
+	} else if (this.pos.x + this.size > canvas.width) {
+		this.pos.x = canvas.width - this.size;
+		this.vel.x = -0.8*this.vel.x;
+		this.acc.x = -this.acc.x;
 	}
 
 	this.pos.add(this.vel);
@@ -161,6 +209,7 @@ var keyUp = function(e,p) {
 }
 
 var p1 = new Player(200,50,p1_ctrls);
+var ball = new Ball (canvas.width/2, canvas.height*0.1)
 
 document.addEventListener("keydown", function(e){keyDown(e,p1);}, false);
 document.addEventListener("keyup", function(e){keyUp(e,p1);}, false);
@@ -168,7 +217,9 @@ document.addEventListener("keyup", function(e){keyUp(e,p1);}, false);
 
 var update = function(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
+	ball.draw();
 	p1.draw();
+	ball.update();
 	p1.update();
 }
 
