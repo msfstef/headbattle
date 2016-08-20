@@ -83,21 +83,47 @@ Player.prototype.update = function() {
 		this.canJump = true;
 	}
 
-	if (this.rightPress){
-		this.acc.x = 1;
-	} else if (!this.rightPress && this.vel.x > 0) {
-		this.acc.x = -2;
+	if (this.rightPress && !this.leftPress) {
+		if (Math.sign(this.vel.x) == -1){
+			this.acc.x = 2;
+		} else {
+			this.acc.x = 1;
+		}
+	} else if (this.leftPress && !this.rightPress) {
+		if (Math.sign(this.vel.x) == 1){
+			this.acc.x = -2;
+		} else {
+			this.acc.x = -1;
+		}
+	} else if (Math.abs(this.vel.x) > 0) {
+		this.acc.x = -Math.sign(this.vel.x)*2;
 	} else {
 		this.acc.x = 0;
 		this.vel.x = 0;
 	}
 
-	if (this.frozen){ return; }
+
+	if (this.frozen){
+		this.vel.x = 0;
+		this.acc.x = 0;
+	}
+
 	if (this.canJump && this.upPress){
 		this.vel.y = this.jumpSpd;
 		this.canJump = false;
 		this.jumpTimer=0;
 	}
+
+	if (this.pos.x - this.headSize < 0) {
+		this.pos.x = 0 + this.headSize;
+		this.vel.x = 0;
+		this.acc.x = 0;
+	} else if (this.pos.x + this.headSize > 1600) {
+		this.pos.x = 1600 - this.headSize;
+		this.vel.x = 0;
+		this.acc.x = 0;
+	}
+
 	this.pos.add(this.vel);
 	this.vel.add(this.acc);
 };
