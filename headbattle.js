@@ -3,18 +3,7 @@
 var canvas = document.getElementById('canvasHB');
 var ctx = canvas.getContext('2d');
 
-
-var rightPress_p1 = false;
-var leftPress_p1 = false;
-var upPress_p1 = false;
-var downPress_p1 = false;
-
-var rightPress_p2 = false;
-var leftPress_p2 = false;
-var upPress_p2 = false;
-var downPress_p2 = false;
-
-var p1_ctrls = new Array(87,83,65,67);
+var p1_ctrls = new Array(87,83,65,68);
 
 
 var Vector2d  = function (x,y) {
@@ -35,18 +24,19 @@ Vector2d.prototype.set = function(x,y) {
 };
 
 
-var Player = function(x,y){
+var Player = function(x,y,ctrls){
 	this.pos = new Vector2d(x,y); // position of head centre
 	this.vel = new Vector2d(0,0);
 	this.acc = new Vector2d(0,0);
 	this.headSize = 40; 
 	this.bod
-	this.init(x,y);
+	this.init(x,y,ctrls);
 };
 
-Player.prototype.init = function(ctrls,x,y) {
+Player.prototype.init = function(x,y,ctrls) {
 	this.ctrls = ctrls;
 	console.log(this.ctrls);
+	console.log(typeof(this.ctrls))
 	this.upPress = false;
 	this.downPress = false;
 	this.leftPress = false;
@@ -56,48 +46,8 @@ Player.prototype.init = function(ctrls,x,y) {
 	this.vel.set(0,0);
 	this.frozen = false;
 	this.canJump = true;
-	this.jumpDelay = 5;
-	this.jumpTimer = 0;
-	this.jumpSpd = -6;
+	this.jumpSpd = -20;
 };
-
-document.addEventListener("keydown", Player.prototype.keyDown, false);
-document.addEventListener("keyup", Player.prototype.keyUp, false);
-
-Player.prototype.keyDown = function(e) {
-	if(e.keyCode == this.ctrls[0]) {
-		console.log('lol')
-        this.upPress = true;
-    }
-    else if(e.keyCode == this.ctrls[1]) {
-        this.downPress = true;
-    } 
-    else if(e.keyCode == this.ctrls[2]) {
-        this.rightPress = true;
-    }
-    else if(e.keyCode == this.ctrls[3]) {
-        this.leftPress = true;
-    }
-}
-
-Player.prototype.keyUp = function(e) {
-	if(e.keyCode == this.ctrls[0]) {
-        this.upPress = false;
-    }
-    else if(e.keyCode == this.ctrls[1]) {
-        this.downPress = false;
-    } 
-    else if(e.keyCode == this.ctrls[2]) {
-        this.rightPress = false;
-    }
-    else if(e.keyCode == this.ctrls[3]) {
-        this.leftPress = false;
-    }
-}
-
-
-
-
 
 Player.prototype.draw = function() {
 	ctx.beginPath();
@@ -125,9 +75,12 @@ Player.prototype.draw = function() {
 Player.prototype.update = function() {
 	if (this.pos.y < 900 - this.headSize*3.7){
 		this.acc.y = 1;
+		this.canJump = false;
 	} else {
+		this.pos.y = 900 - this.headSize*3.7;
 		this.acc.y = 0;
 		this.vel.y = 0;
+		this.canJump = true;
 	}
 
 	if (this.rightPress){
@@ -139,14 +92,8 @@ Player.prototype.update = function() {
 		this.vel.x = 0;
 	}
 
-
-	if (this.jumpTimer<this.jumpDelay){
-		this.jumpTimer++;
-	}else if (!this.canJump) {
-		this.canJump = true;
-	}
 	if (this.frozen){ return; }
-	if (this.canJump && upPress_p1){
+	if (this.canJump && this.upPress){
 		this.vel.y = this.jumpSpd;
 		this.canJump = false;
 		this.jumpTimer=0;
@@ -156,38 +103,42 @@ Player.prototype.update = function() {
 };
 
 
-// function keyDownHandler(e) {
-//     if(e.keyCode == 87) {
-//         upPress_p1 = true;
-//     }
-//     else if(e.keyCode == 83) {
-//         downPress_p1 = true;
-//     } 
-//     else if(e.keyCode == 68) {
-//         rightPress_p1 = true;
-//     }
-//     else if(e.keyCode == 65) {
-//         leftPress_p1 = true;
-//     }
-// };
 
+var keyDown = function(e,p) {
+	if(e.keyCode == p.ctrls[0]) {
+        p.upPress = true;
+    }
+    else if(e.keyCode == p.ctrls[1]) {
+        p.downPress = true;
+    } 
+    else if(e.keyCode == p.ctrls[2]) {
+        p.leftPress = true;
+    }
+    else if(e.keyCode == p.ctrls[3]) {
+        p.rightPress = true;
+    }
+}
 
-// function keyUpHandler(e) {
-//     if(e.keyCode == 87) {
-//         upPress_p1 = false;
-//     }
-//     else if(e.keyCode == 83) {
-//         downPress_p1 = false;
-//     } 
-//     else if(e.keyCode == 68) {
-//         rightPress_p1 = false;
-//     }
-//     else if(e.keyCode == 65) {
-//         leftPress_p1 = false;
-//     }
-// };
+var keyUp = function(e,p) {
+	if(e.keyCode == p.ctrls[0]) {
+        p.upPress = false;
+    }
+    else if(e.keyCode == p.ctrls[1]) {
+        p.downPress = false;
+    } 
+    else if(e.keyCode == p.ctrls[2]) {
+        p.leftPress = false;
+    }
+    else if(e.keyCode == p.ctrls[3]) {
+        p.rightPress = false;
+    }
+}
 
-var p1 = new Player(p1_ctrls,200,50);
+var p1 = new Player(200,50,p1_ctrls);
+
+document.addEventListener("keydown", function(e){keyDown(e,p1);}, false);
+document.addEventListener("keyup", function(e){keyUp(e,p1);}, false);
+
 
 var update = function(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
