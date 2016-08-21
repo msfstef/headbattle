@@ -6,6 +6,7 @@ var ctx = canvas.getContext('2d');
 var p1_ctrls = new Array(87,83,65,68);
 
 
+
 var Vector2d  = function (x,y) {
 	this.x = x;
 	this.y = y;
@@ -152,7 +153,7 @@ Ball.prototype.draw = function() {
 	ctx.closePath();
 };
 
-Ball.prototype.update = function() {
+Ball.prototype.update = function(players) {
 	if (this.pos.y < canvas.height - this.size*1.1){
 		this.acc.y = 1.5;
 	} else if (this.pos.y) {
@@ -170,6 +171,70 @@ Ball.prototype.update = function() {
 		this.pos.x = canvas.width - this.size;
 		this.vel.x = -0.8*this.vel.x;
 		this.acc.x = -this.acc.x;
+	}
+
+
+	function dot(a,b) {
+		var n = 0;
+		for (var i = 0; i < 2; i++) n += a[i] * b[i];
+			return n;
+	}
+
+	function sub(a,b) {
+		var c = [0,0];
+		for (var i = 0; i < 2; i++) {
+			c[i] += a[i] - b[i];
+		};
+		return c;
+	}
+
+	for (var i=0; i < players.length; i++) {
+		var p = players[i];
+		
+		if (Math.sqrt((this.pos.x - p.pos.x)*(this.pos.x - p.pos.x)
+				+ (this.pos.y-p.pos.y)*(this.pos.y-p.pos.y)) < 
+				(this.size + p.headSize)) {
+			var velB = [this.vel.x,this.vel.y];
+			var posB = [this.pos.x,this.pos.y];
+			var velP = [p.vel.x,p.vel.y];
+			var posP = [p.pos.x,p.pos.y];
+			var mB = 1;
+			var mP = 60;
+
+			this.vel.x =  this.vel.x - ((2*mP/(mB+mP))*(
+				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
+				sub(posB,posP)[0];
+			this.vel.y = this.vel.y - ((2*mP/(mB+mP))*(
+				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
+				sub(posB,posP)[1];
+
+			p.vel.x =  p.vel.x - ((2*mB/(mB+mP))*(
+				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
+				sub(posP,posB)[0];
+			p.vel.y =  p.vel.y - ((2*mB/(mB+mP))*(
+				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
+				sub(posP,posB)[1];
+			console.log(this.vel.x)
+			console.log(p.vel.x)
+
+
+		} else if (this.pos.y > p.pos.y - p.headSize &&
+			this.pos.y + this.size <= p.pos.y + p.headSize*3.7) {
+			if (this.pos.x - this.size <= p.pos.x + p.headSize*0.4 &&
+				this.pos.x - this.size >= p.pos.x - p.headSize*0.4) {
+
+				this.pos.x = this.size + p.pos.x + p.headSize*0.5;
+				this.vel.x = -this.vel.x + p.vel.x + 1;
+				this.vel.y -= 15;
+
+			} else if (this.pos.x + this.size <= p.pos.x + p.headSize*0.4 &&
+						this.pos.x + this.size >= p.pos.x - p.headSize*0.4){
+
+				this.pos.x = - this.size + p.pos.x - p.headSize*0.5;
+				this.vel.x = -this.vel.x + p.vel.x - 1;
+				this.vel.y -= 15;
+			}
+		}
 	}
 
 	this.pos.add(this.vel);
@@ -209,6 +274,7 @@ var keyUp = function(e,p) {
 }
 
 var p1 = new Player(200,50,p1_ctrls);
+var players = new Array(p1);
 var ball = new Ball (canvas.width/2, canvas.height*0.1)
 
 document.addEventListener("keydown", function(e){keyDown(e,p1);}, false);
@@ -219,7 +285,7 @@ var update = function(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	ball.draw();
 	p1.draw();
-	ball.update();
+	ball.update(players);
 	p1.update();
 }
 
