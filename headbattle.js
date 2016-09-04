@@ -3,7 +3,9 @@
 var canvas = document.getElementById('canvasHB');
 var ctx = canvas.getContext('2d');
 
+// Controls are up, down, left, right.
 var p1_ctrls = new Array(87,83,65,68);
+var p2_ctrls = new Array(38,40,37,39);
 var spf = 1/60; // Seconds per frame.
 
 
@@ -339,18 +341,23 @@ var keyUp = function(e,p) {
 }
 
 var p1 = new Player(200,50,p1_ctrls);
-var players = new Array(p1);
+var p2 = new Player(canvas.width-200,50,p2_ctrls);
+var players = new Array(p1,p2);
 var ball = new Ball (canvas.width/2, canvas.height*0.1)
 
 document.addEventListener("keydown", function(e){keyDown(e,p1);}, false);
 document.addEventListener("keyup", function(e){keyUp(e,p1);}, false);
 
+document.addEventListener("keydown", function(e){keyDown(e,p2);}, false);
+document.addEventListener("keyup", function(e){keyUp(e,p2);}, false);
 
 var update = function(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	ball.draw();
-	p1.draw();
-	p1.update();
+	for (var i=0; i<players.length; i++) {
+		players[i].draw();
+		players[i].update();
+	}
 	ball.update(players);
 }
 
