@@ -66,18 +66,20 @@ Vector2d.prototype.set = function(x,y) {
 };
 
 
-var Player = function(x,y,ctrls){
+var Player = function(x,y,ctrls,colour,p_no){
 	this.pos = new Vector2d(x,y); // position of head centre
 	this.vel = new Vector2d(0,0);
 	this.acc = new Vector2d(0,0);
 	this.last_pos = new Vector2d(0,0);
 	this.mass = 60;
 	this.headSize = 40;
-	this.init(x,y,ctrls);
+	this.init(x,y,ctrls,colour,p_no);
 };
 
-Player.prototype.init = function(x,y,ctrls) {
+Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 	this.ctrls = ctrls;
+	this.p_no = p_no;
+	this.colour = colour;
 	this.upPress = false;
 	this.downPress = false;
 	this.leftPress = false;
@@ -86,6 +88,7 @@ Player.prototype.init = function(x,y,ctrls) {
 	this.pos.set(x,y);
 	this.vel.set(0,0);
 	this.frozen = false;
+	this.kick = false;
 	this.canJump = true;
 	this.jumpSpd = -150*spf;
 };
@@ -108,6 +111,22 @@ Player.prototype.draw = function() {
 			this.pos.y+this.headSize*3.4, 
 			this.headSize*0.3, 
 			0, Math.PI*2);
+	if (this.kick) {
+		var that = this;
+		setTimeout(function(){
+			that.kick = false;
+		}, 100);
+		if (this.p_no == 0) {
+			var dir = 0;
+		} else if (this.p_no == 1){
+			var dir = this.headSize*1.4;
+		}
+		ctx.rect(this.pos.x-dir, 
+			this.pos.y+this.headSize*3.1, 
+			this.headSize*1.4, 
+			this.headSize*0.6)
+	}
+
 	ctx.fillStyle = '#000000';
 	ctx.fill();
 	ctx.closePath();
@@ -302,6 +321,25 @@ Ball.prototype.update = function(players) {
 			this.pos.x = this.last_pos.x.clone();
 			this.pos.y = this.last_pos.y.clone();
 		}
+
+		if (p.downPress) {
+			p.kick = true;
+			p.downPress = false;
+			if (Math.sqrt(((this.pos.x - p.pos.x)*
+				(this.pos.x - p.pos.x)) + 
+				((this.pos.y-p.pos.y-3.4*p.headSize)*
+				(this.pos.y-p.pos.y-3.4*p.headSize))) < 
+				(this.size + 1.4*p.headSize) &&
+				this.pos.y+this.size > p.pos.y-p.headSize*3.7) {
+				if (p.p_no == 0 && this.pos.x > p.pos.x) {
+					this.vel.y += 200*spf;
+					this.vel.x += 200*spf;
+				} else if (p.p_no == 1 && this.pos.x < p.pos.x) {
+					this.vel.y += 200*spf;
+					this.vel.x -= 200*spf;
+				}
+			}
+		}
 	}
 	this.last_pos = this.pos.clone();
 	this.pos.add(this.vel);
@@ -340,8 +378,8 @@ var keyUp = function(e,p) {
     }
 }
 
-var p1 = new Player(200,50,p1_ctrls);
-var p2 = new Player(canvas.width-200,50,p2_ctrls);
+var p1 = new Player(canvas.width*0.2,50,p1_ctrls,'blue',0);
+var p2 = new Player(canvas.width*0.8,50,p2_ctrls,'red',1);
 var players = new Array(p1,p2);
 var ball = new Ball (canvas.width/2, canvas.height*0.1)
 
