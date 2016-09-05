@@ -6,7 +6,7 @@ var ctx = canvas.getContext('2d');
 // Controls are up, down, left, right.
 var p1_ctrls = new Array(87,83,65,68);
 var p2_ctrls = new Array(38,40,37,39);
-var spf = 1/60; // Seconds per frame.
+var spf = 0.3; // Seconds per frame.
 
 
 Object.prototype.clone = Array.prototype.clone = function()
@@ -195,7 +195,7 @@ Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 	this.frozen = false;
 	this.kick = false;
 	this.canJump = true;
-	this.jumpSpd = -150*spf;
+	this.jumpSpd = -20*spf;
 };
 
 Player.prototype.draw = function() {
@@ -239,7 +239,7 @@ Player.prototype.draw = function() {
 
 Player.prototype.update = function() {
 	if (this.pos.y < canvas.height - this.headSize*3.7){
-		this.acc.y = 1.5*spf;
+		this.acc.y = 1.5*spf*spf;
 		this.canJump = false;
 	} else {
 		this.pos.y = canvas.height - this.headSize*3.7;
@@ -250,16 +250,19 @@ Player.prototype.update = function() {
 
 	if (this.rightPress && !this.leftPress) {
 		if (Math.sign(this.vel.x) == -1){
-			this.acc.x = 2.5*spf;
+			this.acc.x = 2.5*spf*spf;
 		} else {
-			this.acc.x = 1*spf;
+			this.acc.x = 1*spf*spf;
 		}
 	} else if (this.leftPress && !this.rightPress) {
 		if (Math.sign(this.vel.x) == 1){
-			this.acc.x = -2.5*spf;
+			this.acc.x = -2.5*spf*spf;
 		} else {
-			this.acc.x = -1*spf;
+			this.acc.x = -1*spf*spf;
 		}
+	} else if (this.pos.y < 
+				canvas.height-this.headSize*3.7) {
+		this.acc.x = 0;
 	} else if (Math.abs(this.vel.x) > 1*spf) {
 		this.acc.x = -Math.sign(this.vel.x)*2*spf;
 	} else {
@@ -298,7 +301,7 @@ Player.prototype.update = function() {
 	this.bodyColl.update(this.pos.x-
 						this.headSize*0.5, 
 						this.pos.y+
-						this.headSize)
+						this.headSize*0)
 	this.footColl.update(this.pos.x, 
 						this.pos.y+
 						this.headSize*3.4)
@@ -309,9 +312,9 @@ Player.prototype.update = function() {
 var Ball = function(x,y){
 	this.pos = new Vector2d(x,y); // position of head centre
 	this.vel = new Vector2d(0,0);
-	this.acc = new Vector2d(0,1.5*spf);
+	this.acc = new Vector2d(0,1.5*spf*spf);
 	this.last_pos = new Vector2d(0,0);
-	this.mass = 10;
+	this.mass = 5;
 	this.size = 30; 
 	this.init(x,y);
 };
@@ -370,6 +373,8 @@ Ball.prototype.update = function(players) {
 			this.coll.check(p.footColl)) {
 			if (this.coll.check(p.headColl)) {
 				var posP = p.pos;
+				//p.pos.x = p.last_pos.x.clone();
+				p.pos.y = p.last_pos.y.clone();
 			} else {
 				var posP = new Vector2d(p.pos.x, 
 							p.pos.y+3.4*p.headSize);
@@ -426,11 +431,11 @@ Ball.prototype.update = function(players) {
 				(this.size + 1.4*p.headSize) &&
 				this.pos.y+this.size > p.pos.y-p.headSize*3.7) {
 				if (p.p_no == 0 && this.pos.x > p.pos.x) {
-					this.vel.y += 200*spf;
-					this.vel.x += 200*spf;
+					this.vel.y += 30*spf;
+					this.vel.x += 30*spf;
 				} else if (p.p_no == 1 && this.pos.x < p.pos.x) {
-					this.vel.y += 200*spf;
-					this.vel.x -= 200*spf;
+					this.vel.y += 30*spf;
+					this.vel.x -= 30*spf;
 				}
 			}
 		}
