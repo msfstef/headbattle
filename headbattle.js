@@ -77,7 +77,7 @@ var CircCollider = function(x,y,r) {
 	this.r = r;
 };
 CircCollider.prototype.check = function (coll) {
-	if (typeof(coll) == CircCollider) {
+	if (coll instanceof CircCollider) {
 		if (Math.sqrt((this.x - coll.x)*(this.x - coll.x)
 			+ (this.y - coll.y)*(this.y - coll.y)) < 
 			(this.r + coll.r)) {
@@ -85,7 +85,7 @@ CircCollider.prototype.check = function (coll) {
 		} else {
 			return false;
 		}
-	} else if (typeof(coll) == RectCollider) {
+	} else if (coll instanceof RectCollider) {
 		var distX = Math.abs(this.x - coll.x - coll.w/2);
    		var distY = Math.abs(this.y - coll.y - coll.h/2);
 
@@ -108,7 +108,10 @@ CircCollider.prototype.check = function (coll) {
     	return (dx*dx + dy*dy <= (this.r*this.r));
 	}
 };
-
+CircCollider.prototype.update = function (x,y) {
+	this.x = x;
+	this.y = y;
+};
 
 var RectCollider = function(x,y,w,h) {
 	this.x = x;
@@ -117,14 +120,14 @@ var RectCollider = function(x,y,w,h) {
 	this.h = h;
 };
 RectCollider.prototype.check = function (coll) {
-	if (typeof(coll) == RectCollider) {
+	if (coll instanceof RectCollider) {
 		if (this.x <= coll.x + coll.w &&
    			this.x + this.w >= coll.x &&
   			this.y <= coll.y + coll.h &&
    			this.h + this.y >= coll.y) {
 			return true;
 		}
-	} else if (typeof(coll) == CircCollider) {
+	} else if (coll instanceof CircCollider) {
 		var distX = Math.abs(coll.x - this.x - this.w/2);
    		var distY = Math.abs(coll.y - this.y - this.h/2);
 
@@ -146,6 +149,10 @@ RectCollider.prototype.check = function (coll) {
     	var dy = distY - this.h/2;
     	return (dx*dx + dy*dy <= (coll.r*coll.r));
 	}
+};
+RectCollider.prototype.update = function (x,y) {
+	this.x = x;
+	this.y = y;
 };
 
 
@@ -170,6 +177,21 @@ Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 
 	this.pos.set(x,y);
 	this.vel.set(0,0);
+
+	this.headColl = new CircCollider(this.pos.x, 
+									this.pos.y, 
+									this.headSize)
+	this.bodyColl = new RectCollider(this.pos.x-
+									this.headSize*0.5, 
+									this.pos.y+
+									this.headSize, 
+									this.headSize, 
+									this.headSize*2.1)
+	this.footColl = new CircCollider(this.pos.x, 
+									this.pos.y+
+									this.headSize*3.4, 
+									this.headSize*0.3)
+
 	this.frozen = false;
 	this.kick = false;
 	this.canJump = true;
@@ -270,6 +292,16 @@ Player.prototype.update = function() {
 	this.last_pos = this.pos.clone();
 	this.pos.add(this.vel);
 	this.vel.add(this.acc);
+
+	this.headColl.update(this.pos.x, 
+						this.pos.y)
+	this.bodyColl.update(this.pos.x-
+						this.headSize*0.5, 
+						this.pos.y+
+						this.headSize)
+	this.footColl.update(this.pos.x, 
+						this.pos.y+
+						this.headSize*3.4)
 };
 
 
@@ -287,6 +319,9 @@ var Ball = function(x,y){
 Ball.prototype.init = function(x,y) {
 	this.pos.set(x,y);
 	this.vel.set(0,0);
+	this.coll = new CircCollider(this.pos.x, 
+									this.pos.y, 
+									this.size)
 	this.elast = 0.7;
 };
 
@@ -331,16 +366,23 @@ Ball.prototype.update = function(players) {
 	for (var i=0; i < players.length; i++) {
 		var p = players[i];
 		var sizes = this.size + p.headSize;
-		if (Math.sqrt((this.pos.x - p.pos.x)*(this.pos.x - p.pos.x)
-				+ (this.pos.y-p.pos.y)*(this.pos.y-p.pos.y)) < 
-				(this.size + p.headSize)) {
+		if (this.coll.check(p.headColl) || 
+			this.coll.check(p.footColl)) {
+			if (this.coll.check(p.headColl)) {
+				var posP = p.pos;
+			} else {
+				var posP = new Vector2d(p.pos.x, 
+							p.pos.y+3.4*p.headSize);
+				//p.pos.x = p.last_pos.x.clone();
+				p.pos.y = p.last_pos.y.clone();
+			}
+
 			var velB = this.vel;
 			var posB = this.pos;
 			var velP = p.vel;
-			var posP = p.pos;
 			var mB = this.mass;
 			var mP = p.mass;
-
+			
 			this.vel.x =  this.vel.x - ((2*mP/(mB+mP))*(
 				velB.sub(velP).dot(posB.sub(posP)))/
 				posB.sub(posP).dot(posB.sub(posP)))*
@@ -362,58 +404,16 @@ Ball.prototype.update = function(players) {
 			this.pos.x = this.last_pos.x.clone();
 			this.pos.y = this.last_pos.y.clone();
 
-
-		} else if (this.pos.y - this.size > p.pos.y + p.headSize &&
-			this.pos.y - this.size <= p.pos.y + p.headSize*2.4) {
-			if (Math.abs(this.pos.x - p.pos.x) < 
-				this.size + p.headSize*0.4) {
+		} else if (this.coll.check(p.bodyColl)) {
 				var vel_init = this.vel.x.clone();
 				this.vel.x = (p.mass/(this.mass+p.mass)*
 							(p.vel.x - this.vel.x));
 				p.vel.x = -(this.mass/(this.mass+p.mass)*
 							(p.vel.x - vel_init));
 
-				p.pos.x = p.last_pos.x.clone();
-				//p.pos.y = p.last_pos.y.clone();
 				this.pos.x = this.last_pos.x.clone();
 				this.pos.y = this.last_pos.y.clone();
 				console.log('horizontal collision');
-			}
-		} else if (Math.sqrt(((this.pos.x - p.pos.x)*
-				(this.pos.x - p.pos.x)) + 
-				((this.pos.y-p.pos.y-3.4*p.headSize)*
-				(this.pos.y-p.pos.y-3.4*p.headSize))) < 
-				(this.size + 0.3*p.headSize)) {
-			var velB = this.vel;
-			var posB = this.pos;
-			var velP = p.vel;
-			var posP = new Vector2d(p.pos.x, 
-							p.pos.y+3.4*p.headSize);
-			var mB = this.mass;
-			var mP = p.mass;
-
-			this.vel.x =  this.vel.x - ((2*mP/(mB+mP))*(
-				velB.sub(velP).dot(posB.sub(posP)))/
-				posB.sub(posP).dot(posB.sub(posP)))*
-				posB.sub(posP).x;
-			this.vel.y = this.vel.y - ((2*mP/(mB+mP))*(
-				velB.sub(velP).dot(posB.sub(posP)))/
-				posB.sub(posP).dot(posB.sub(posP)))*
-				posB.sub(posP).y;
-
-			p.vel.x =  p.vel.x - ((2*mB/(mB+mP))*(
-				velP.sub(velB).dot(posP.sub(posB)))/
-				posP.sub(posB).dot(posP.sub(posB)))*
-				posP.sub(posB).x;
-			p.vel.y =  p.vel.y - ((2*mB/(mB+mP))*(
-				velP.sub(velB).dot(posP.sub(posB)))/
-				posP.sub(posB).dot(posP.sub(posB)))*
-				posP.sub(posB).y;
-
-			//p.pos.x = p.last_pos.x.clone();
-			p.pos.y = p.last_pos.y.clone();
-			this.pos.x = this.last_pos.x.clone();
-			this.pos.y = this.last_pos.y.clone();
 		}
 
 		if (p.downPress) {
@@ -438,6 +438,7 @@ Ball.prototype.update = function(players) {
 	this.last_pos = this.pos.clone();
 	this.pos.add(this.vel);
 	this.vel.add(this.acc);
+	this.coll.update(this.pos.x, this.pos.y);
 };
 
 
@@ -493,4 +494,9 @@ var update = function(){
 	ball.update(players);
 }
 
-setInterval(update,spf);
+//setInterval(update,spf*1000);
+function repeat() {
+  update()
+  requestAnimationFrame(repeat);
+}
+repeat();
