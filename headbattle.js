@@ -64,6 +64,89 @@ Vector2d.prototype.set = function(x,y) {
 	this.x = x;
 	this.y = y;
 };
+Vector2d.prototype.dot = function(u) {
+	return this.x*u.x + this.y*u.y;
+};
+Vector2d.prototype.sub = function(u) {
+	return new Vector2d(this.x-u.x, this.y-u.y);
+};
+
+var CircCollider = function(x,y,r) {
+	this.x = x;
+	this.y = y;
+	this.r = r;
+};
+CircCollider.prototype.check = function (coll) {
+	if (typeof(coll) == CircCollider) {
+		if (Math.sqrt((this.x - coll.x)*(this.x - coll.x)
+			+ (this.y - coll.y)*(this.y - coll.y)) < 
+			(this.r + coll.r)) {
+			return true;
+		} else {
+			return false;
+		}
+	} else if (typeof(coll) == RectCollider) {
+		var distX = Math.abs(this.x - coll.x - coll.w/2);
+   		var distY = Math.abs(this.y - coll.y - coll.h/2);
+
+    	if (distX > (coll.w/2 + this.r)) {
+      	 	 return false;
+    	}
+    	if (distY > (coll.h/2 + this.r)) {
+        	return false;
+    	}
+
+    	if (distX <= (coll.w/2)) {
+       		return true;
+    	}
+    	if (distY <= (coll.h/2)) {
+        	return true;
+    	}
+
+    	var dx = distX - coll.w/2;
+    	var dy = distY - coll.h/2;
+    	return (dx*dx + dy*dy <= (this.r*this.r));
+	}
+};
+
+
+var RectCollider = function(x,y,w,h) {
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+};
+RectCollider.prototype.check = function (coll) {
+	if (typeof(coll) == RectCollider) {
+		if (this.x <= coll.x + coll.w &&
+   			this.x + this.w >= coll.x &&
+  			this.y <= coll.y + coll.h &&
+   			this.h + this.y >= coll.y) {
+			return true;
+		}
+	} else if (typeof(coll) == CircCollider) {
+		var distX = Math.abs(coll.x - this.x - this.w/2);
+   		var distY = Math.abs(coll.y - this.y - this.h/2);
+
+    	if (distX > (this.w/2 + coll.r)) {
+      	 	 return false;
+    	}
+    	if (distY > (this.h/2 + coll.r)) {
+        	return false;
+    	}
+
+    	if (distX <= (this.w/2)) {
+       		return true;
+    	}
+    	if (distY <= (this.h/2)) {
+        	return true;
+    	}
+
+    	var dx = distX - this.w/2;
+    	var dy = distY - this.h/2;
+    	return (dx*dx + dy*dy <= (coll.r*coll.r));
+	}
+};
 
 
 var Player = function(x,y,ctrls,colour,p_no){
@@ -251,26 +334,30 @@ Ball.prototype.update = function(players) {
 		if (Math.sqrt((this.pos.x - p.pos.x)*(this.pos.x - p.pos.x)
 				+ (this.pos.y-p.pos.y)*(this.pos.y-p.pos.y)) < 
 				(this.size + p.headSize)) {
-			var velB = [this.vel.x,this.vel.y];
-			var posB = [this.pos.x,this.pos.y];
-			var velP = [p.vel.x,p.vel.y];
-			var posP = [p.pos.x,p.pos.y];
+			var velB = this.vel;
+			var posB = this.pos;
+			var velP = p.vel;
+			var posP = p.pos;
 			var mB = this.mass;
 			var mP = p.mass;
 
 			this.vel.x =  this.vel.x - ((2*mP/(mB+mP))*(
-				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
-				sub(posB,posP)[0];
+				velB.sub(velP).dot(posB.sub(posP)))/
+				posB.sub(posP).dot(posB.sub(posP)))*
+				posB.sub(posP).x;
 			this.vel.y = this.vel.y - ((2*mP/(mB+mP))*(
-				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
-				sub(posB,posP)[1];
+				velB.sub(velP).dot(posB.sub(posP)))/
+				posB.sub(posP).dot(posB.sub(posP)))*
+				posB.sub(posP).y;
 
 			p.vel.x =  p.vel.x - ((2*mB/(mB+mP))*(
-				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
-				sub(posP,posB)[0];
+				velP.sub(velB).dot(posP.sub(posB)))/
+				posP.sub(posB).dot(posP.sub(posB)))*
+				posP.sub(posB).x;
 			p.vel.y =  p.vel.y - ((2*mB/(mB+mP))*(
-				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
-				sub(posP,posB)[1];
+				velP.sub(velB).dot(posP.sub(posB)))/
+				posP.sub(posB).dot(posP.sub(posB)))*
+				posP.sub(posB).y;
 
 			this.pos.x = this.last_pos.x.clone();
 			this.pos.y = this.last_pos.y.clone();
@@ -286,6 +373,8 @@ Ball.prototype.update = function(players) {
 				p.vel.x = -(this.mass/(this.mass+p.mass)*
 							(p.vel.x - vel_init));
 
+				p.pos.x = p.last_pos.x.clone();
+				//p.pos.y = p.last_pos.y.clone();
 				this.pos.x = this.last_pos.x.clone();
 				this.pos.y = this.last_pos.y.clone();
 				console.log('horizontal collision');
@@ -295,26 +384,31 @@ Ball.prototype.update = function(players) {
 				((this.pos.y-p.pos.y-3.4*p.headSize)*
 				(this.pos.y-p.pos.y-3.4*p.headSize))) < 
 				(this.size + 0.3*p.headSize)) {
-			var velB = [this.vel.x,this.vel.y];
-			var posB = [this.pos.x,this.pos.y];
-			var velP = [p.vel.x,p.vel.y];
-			var posP = [p.pos.x,p.pos.y+3.4*p.headSize];
+			var velB = this.vel;
+			var posB = this.pos;
+			var velP = p.vel;
+			var posP = new Vector2d(p.pos.x, 
+							p.pos.y+3.4*p.headSize);
 			var mB = this.mass;
 			var mP = p.mass;
 
 			this.vel.x =  this.vel.x - ((2*mP/(mB+mP))*(
-				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
-				sub(posB,posP)[0];
+				velB.sub(velP).dot(posB.sub(posP)))/
+				posB.sub(posP).dot(posB.sub(posP)))*
+				posB.sub(posP).x;
 			this.vel.y = this.vel.y - ((2*mP/(mB+mP))*(
-				dot(sub(velB,velP),sub(posB,posP)))/dot(sub(posB,posP),sub(posB,posP)))*
-				sub(posB,posP)[1];
+				velB.sub(velP).dot(posB.sub(posP)))/
+				posB.sub(posP).dot(posB.sub(posP)))*
+				posB.sub(posP).y;
 
 			p.vel.x =  p.vel.x - ((2*mB/(mB+mP))*(
-				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
-				sub(posP,posB)[0];
+				velP.sub(velB).dot(posP.sub(posB)))/
+				posP.sub(posB).dot(posP.sub(posB)))*
+				posP.sub(posB).x;
 			p.vel.y =  p.vel.y - ((2*mB/(mB+mP))*(
-				dot(sub(velP,velB),sub(posP,posB)))/dot(sub(posP,posB),sub(posP,posB)))*
-				sub(posP,posB)[1];
+				velP.sub(velB).dot(posP.sub(posB)))/
+				posP.sub(posB).dot(posP.sub(posB)))*
+				posP.sub(posB).y;
 
 			//p.pos.x = p.last_pos.x.clone();
 			p.pos.y = p.last_pos.y.clone();
