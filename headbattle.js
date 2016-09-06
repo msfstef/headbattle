@@ -90,7 +90,7 @@ CircCollider.prototype.check = function (coll) {
    		var distY = Math.abs(this.y - coll.y - coll.h/2);
 
     	if (distX > (coll.w/2 + this.r)) {
-      	 	 return false;
+      	 	return false;
     	}
     	if (distY > (coll.h/2 + this.r)) {
         	return false;
@@ -192,6 +192,11 @@ Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 									this.headSize*3.4, 
 									this.headSize*0.3)
 
+	
+	this.goalPost = new GoalPost(p_no,
+						this.headSize*4,
+						this.headSize*9);
+
 	this.frozen = false;
 	this.kick = false;
 	this.canJump = true;
@@ -235,6 +240,8 @@ Player.prototype.draw = function() {
 	ctx.fillStyle = '#000000';
 	ctx.fill();
 	ctx.closePath();
+
+	this.goalPost.draw();
 };
 
 Player.prototype.update = function() {
@@ -314,7 +321,7 @@ var Ball = function(x,y){
 	this.vel = new Vector2d(0,0);
 	this.acc = new Vector2d(0,1.5*spf*spf);
 	this.last_pos = new Vector2d(0,0);
-	this.mass = 5;
+	this.mass = 1;
 	this.size = 30; 
 	this.init(x,y);
 };
@@ -374,7 +381,7 @@ Ball.prototype.update = function(players) {
 			if (this.coll.check(p.headColl)) {
 				var posP = p.pos;
 				//p.pos.x = p.last_pos.x.clone();
-				p.pos.y = p.last_pos.y.clone();
+				//p.pos.y = p.last_pos.y.clone();
 			} else {
 				var posP = new Vector2d(p.pos.x, 
 							p.pos.y+3.4*p.headSize);
@@ -431,13 +438,25 @@ Ball.prototype.update = function(players) {
 				(this.size + 1.4*p.headSize) &&
 				this.pos.y+this.size > p.pos.y-p.headSize*3.7) {
 				if (p.p_no == 0 && this.pos.x > p.pos.x) {
-					this.vel.y += 30*spf;
+					this.vel.y -= 30*spf;
 					this.vel.x += 30*spf;
 				} else if (p.p_no == 1 && this.pos.x < p.pos.x) {
-					this.vel.y += 30*spf;
+					this.vel.y -= 30*spf;
 					this.vel.x -= 30*spf;
 				}
 			}
+		}
+
+		if (this.coll.check(p.goalPost.topColl)) {
+			if (this.coll.check(p.goalPost.cornerColl)) {
+				this.vel.x = -this.vel.x;
+			} else {
+				this.vel.y = -this.vel.y;
+			}
+			this.pos.x = this.last_pos.x.clone();
+			this.pos.y = this.last_pos.y.clone();
+		} else if (this.coll.check(p.goalPost.goalColl)) {
+			restartGame(p.p_no);
 		}
 	}
 	this.last_pos = this.pos.clone();
@@ -445,6 +464,51 @@ Ball.prototype.update = function(players) {
 	this.vel.add(this.acc);
 	this.coll.update(this.pos.x, this.pos.y);
 };
+
+var GoalPost = function(p_no,w,h) {
+	this.w = w;
+	this.h = h;
+	this.p_no = p_no;
+	this.init(p_no,w,h);
+};
+GoalPost.prototype.init = function (p_no,w,h) {
+	if (this.p_no == 0) {
+		var pos_x = 0;
+		var corner_x = this.w - 10;
+	} else if (this.p_no == 1) {
+		var pos_x = canvas.width - this.w;
+		var corner_x = pos_x;
+	}
+	this.topColl = new RectCollider(
+					pos_x,
+					canvas.height - this.h,
+					this.w,
+					10);
+	this.cornerColl = new RectCollider(
+					corner_x,
+					canvas.height - this.h,
+					10,
+					10);
+	this.goalColl = new RectCollider(
+					pos_x,
+					canvas.height - this.h + 10,
+					this.w,
+					this.h - 10);
+	this.draw();
+};
+GoalPost.prototype.draw = function () {
+	ctx.beginPath();
+	ctx.rect(this.topColl.x,
+			this.topColl.y,
+			this.w,
+			this.h);
+	ctx.strokeStyle = '#000000';
+	ctx.lineWidth = 8;
+
+	ctx.stroke();
+	ctx.closePath();
+};
+
 
 
 
@@ -478,10 +542,46 @@ var keyUp = function(e,p) {
     }
 }
 
-var p1 = new Player(canvas.width*0.2,50,p1_ctrls,'blue',0);
-var p2 = new Player(canvas.width*0.8,50,p2_ctrls,'red',1);
+
+var p1 = new Player(canvas.width*0.2,canvas.height,
+					p1_ctrls,'blue',0);
+var p2 = new Player(canvas.width*0.8,canvas.height,
+					p2_ctrls,'red',1);
 var players = new Array(p1,p2);
-var ball = new Ball (canvas.width/2, canvas.height*0.1)
+var ball = new Ball (canvas.width/2, 
+					canvas.height*0.1)
+
+var text = '';
+var score_p1 = 0;
+var score_p2 = 0;
+var scored = false;
+
+var drawScore = function () {
+	ctx.font = "60px Comic Sans MS";
+	ctx.fillStyle = "grey";
+	ctx.textAlign = "center";
+	ctx.fillText(text, canvas.width/2, canvas.height/4);
+	ctx.fillText(score_p1.toString()+'-'+score_p2.toString(),
+				canvas.width/2, canvas.height/3);
+}
+
+var restartGame = function (p_no) {
+	scored = true;
+	if (p_no == 0) {
+		text = 'Player 1 Scored!';
+		score_p1 += 1;
+	} else if (p_no == 1) {
+		text = 'Player 2 Scored!';
+		score_p2 += 1;
+	}
+	p1 = new Player(canvas.width*0.2,canvas.height,
+					p1_ctrls,'blue',0);
+	p2 = new Player(canvas.width*0.8,canvas.height,
+					p2_ctrls,'red',1);
+	players = new Array(p1,p2);
+	ball = new Ball (canvas.width/2, 
+					canvas.height*0.1)
+}
 
 document.addEventListener("keydown", function(e){keyDown(e,p1);}, false);
 document.addEventListener("keyup", function(e){keyUp(e,p1);}, false);
@@ -501,7 +601,11 @@ var update = function(){
 
 //setInterval(update,spf*1000);
 function repeat() {
-  update()
-  requestAnimationFrame(repeat);
+  	update()
+  	if (scored) {
+		drawScore();
+		setTimeout(function(){scored = false;}, 2000);
+	}
+  	requestAnimationFrame(repeat);
 }
 repeat();
