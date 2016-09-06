@@ -256,15 +256,15 @@ Player.prototype.update = function() {
 
 	if (this.rightPress && !this.leftPress) {
 		if (Math.sign(this.vel.x) == -1){
-			this.acc.x = 2.5*spf*spf;
+			this.acc.x = 3*spf*spf;
 		} else {
-			this.acc.x = 1*spf*spf;
+			this.acc.x = 1.5*spf*spf;
 		}
 	} else if (this.leftPress && !this.rightPress) {
 		if (Math.sign(this.vel.x) == 1){
-			this.acc.x = -2.5*spf*spf;
+			this.acc.x = -3*spf*spf;
 		} else {
-			this.acc.x = -1*spf*spf;
+			this.acc.x = -1.5*spf*spf;
 		}
 	} else if (this.pos.y < 
 				canvas.height-this.headSize*3.7) {
@@ -320,7 +320,7 @@ var Ball = function(x,y){
 	this.vel = new Vector2d(0,0);
 	this.acc = new Vector2d(0,1.5*spf*spf);
 	this.last_pos = new Vector2d(0,0);
-	this.mass = 1;
+	this.mass = 5;
 	this.size = 30; 
 	this.init(x,y);
 };
@@ -386,7 +386,6 @@ Ball.prototype.update = function(players) {
 				this.pos.y = this.last_pos.y.clone();
 				p.pos.x = p.last_pos.x.clone();
 				//p.pos.y = p.last_pos.y.clone();
-				console.log('horizontal collision');
 		}else if (this.coll.check(p.headColl) || 
 			this.coll.check(p.footColl)) {
 			if (this.coll.check(p.headColl)) {
