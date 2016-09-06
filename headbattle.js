@@ -186,7 +186,7 @@ Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 									this.pos.y+
 									this.headSize, 
 									this.headSize, 
-									this.headSize*2.1)
+									this.headSize*2.3)
 	this.footColl = new CircCollider(this.pos.x, 
 									this.pos.y+
 									this.headSize*3.4, 
@@ -237,7 +237,7 @@ Player.prototype.draw = function() {
 			this.headSize*0.6)
 	}
 
-	ctx.fillStyle = '#000000';
+	ctx.fillStyle = this.colour;
 	ctx.fill();
 	ctx.closePath();
 
@@ -376,7 +376,17 @@ Ball.prototype.update = function(players) {
 	for (var i=0; i < players.length; i++) {
 		var p = players[i];
 		var sizes = this.size + p.headSize;
-		if (this.coll.check(p.headColl) || 
+		if (this.coll.check(p.bodyColl)) {
+				var vel_init = this.vel.x.clone();
+				this.vel.x = (p.mass/(this.mass+p.mass)*
+							(p.vel.x - this.vel.x));
+				p.vel.x = -(this.mass/(this.mass+p.mass)*
+							(p.vel.x - vel_init));
+
+				this.pos.x = this.last_pos.x.clone();
+				this.pos.y = this.last_pos.y.clone();
+				console.log('horizontal collision');
+		}else if (this.coll.check(p.headColl) || 
 			this.coll.check(p.footColl)) {
 			if (this.coll.check(p.headColl)) {
 				var posP = p.pos;
@@ -416,16 +426,6 @@ Ball.prototype.update = function(players) {
 			this.pos.x = this.last_pos.x.clone();
 			this.pos.y = this.last_pos.y.clone();
 
-		} else if (this.coll.check(p.bodyColl)) {
-				var vel_init = this.vel.x.clone();
-				this.vel.x = (p.mass/(this.mass+p.mass)*
-							(p.vel.x - this.vel.x));
-				p.vel.x = -(this.mass/(this.mass+p.mass)*
-							(p.vel.x - vel_init));
-
-				this.pos.x = this.last_pos.x.clone();
-				this.pos.y = this.last_pos.y.clone();
-				console.log('horizontal collision');
 		}
 
 		if (p.downPress) {
@@ -475,9 +475,11 @@ GoalPost.prototype.init = function (p_no,w,h) {
 	if (this.p_no == 0) {
 		var pos_x = 0;
 		var corner_x = this.w - 10;
+		var goal_w = 0;
 	} else if (this.p_no == 1) {
 		var pos_x = canvas.width - this.w;
 		var corner_x = pos_x;
+		var goal_w = 30;
 	}
 	this.topColl = new RectCollider(
 					pos_x,
@@ -490,9 +492,9 @@ GoalPost.prototype.init = function (p_no,w,h) {
 					10,
 					10);
 	this.goalColl = new RectCollider(
-					pos_x,
+					pos_x+goal_w,
 					canvas.height - this.h + 10,
-					this.w,
+					this.w-30, //Ball size.
 					this.h - 10);
 	this.draw();
 };
@@ -544,9 +546,9 @@ var keyUp = function(e,p) {
 
 
 var p1 = new Player(canvas.width*0.2,canvas.height,
-					p1_ctrls,'blue',0);
+					p1_ctrls,'red',0);
 var p2 = new Player(canvas.width*0.8,canvas.height,
-					p2_ctrls,'red',1);
+					p2_ctrls,'blue',1);
 var players = new Array(p1,p2);
 var ball = new Ball (canvas.width/2, 
 					canvas.height*0.1)
@@ -575,9 +577,9 @@ var restartGame = function (p_no) {
 		score_p2 += 1;
 	}
 	p1 = new Player(canvas.width*0.2,canvas.height,
-					p1_ctrls,'blue',0);
+					p1_ctrls,'red',0);
 	p2 = new Player(canvas.width*0.8,canvas.height,
-					p2_ctrls,'red',1);
+					p2_ctrls,'blue',1);
 	players = new Array(p1,p2);
 	ball = new Ball (canvas.width/2, 
 					canvas.height*0.1)
