@@ -183,8 +183,7 @@ Player.prototype.init = function(x,y,ctrls,colour,p_no) {
 									this.headSize)
 	this.bodyColl = new RectCollider(this.pos.x-
 									this.headSize*0.5, 
-									this.pos.y+
-									this.headSize, 
+									this.pos.y, 
 									this.headSize, 
 									this.headSize*2.3)
 	this.footColl = new CircCollider(this.pos.x, 
@@ -328,7 +327,7 @@ var Ball = function(x,y){
 
 Ball.prototype.init = function(x,y) {
 	this.pos.set(x,y);
-	this.vel.set(0,0);
+	this.vel.set(20*(Math.random()-0.5)*spf,0);
 	this.coll = new CircCollider(this.pos.x, 
 									this.pos.y, 
 									this.size)
@@ -385,17 +384,19 @@ Ball.prototype.update = function(players) {
 
 				this.pos.x = this.last_pos.x.clone();
 				this.pos.y = this.last_pos.y.clone();
+				p.pos.x = p.last_pos.x.clone();
+				//p.pos.y = p.last_pos.y.clone();
 				console.log('horizontal collision');
 		}else if (this.coll.check(p.headColl) || 
 			this.coll.check(p.footColl)) {
 			if (this.coll.check(p.headColl)) {
 				var posP = p.pos;
-				//p.pos.x = p.last_pos.x.clone();
+				p.pos.x = p.last_pos.x.clone();
 				//p.pos.y = p.last_pos.y.clone();
 			} else {
 				var posP = new Vector2d(p.pos.x, 
 							p.pos.y+3.4*p.headSize);
-				//p.pos.x = p.last_pos.x.clone();
+				p.pos.x = p.last_pos.x.clone();
 				p.pos.y = p.last_pos.y.clone();
 			}
 
