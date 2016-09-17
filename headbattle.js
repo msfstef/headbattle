@@ -570,10 +570,10 @@ var drawScore = function () {
 
 var restartGame = function (p_no) {
 	scored = true;
-	if (p_no == 0) {
+	if (p_no == 1) {
 		text = 'Player 1 Scored!';
 		score_p1 += 1;
-	} else if (p_no == 1) {
+	} else if (p_no == 0) {
 		text = 'Player 2 Scored!';
 		score_p2 += 1;
 	}
