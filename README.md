@@ -1,6 +1,10 @@
 # headbattle
 
-RawGit page:
-https://rawgit.com/msfstef/headbattle/master/index.html
+Play on:
+https://msfstef.github.io/headbattle/
 
-Will implement github.io page soon.
+Player 1 uses WASD to move, where S (Down) is used to kick the ball in close proximity.
+
+Player 2 uses the arrow keys with the same configuration.
+
+Enjoy!
