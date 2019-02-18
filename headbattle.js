@@ -3,6 +3,15 @@
 var canvas = document.getElementById('canvasHB');
 var ctx = canvas.getContext('2d');
 
+var p1score = document.getElementById("p1score");
+p1score.textContent = 0;
+var p2score = document.getElementById("p2score");
+p2score.textContent = 0;
+
+var instructions = document.getElementsByClassName("instructions");
+var p1inst = instructions[0];
+var p2inst = instructions[1];
+
 // Controls are up, down, left, right.
 var p1_ctrls = new Array(87,83,65,68);
 var p2_ctrls = new Array(38,40,37,39);
@@ -560,9 +569,10 @@ var score_p2 = 0;
 var scored = false;
 
 var drawScore = function () {
-	ctx.font = "60px Comic Sans MS";
-	ctx.fillStyle = "grey";
+	ctx.font = "60px Arial";
+	ctx.fillStyle = "black";
 	ctx.textAlign = "center";
+
 	ctx.fillText(text, canvas.width/2, canvas.height/4);
 	ctx.fillText(score_p1.toString()+'-'+score_p2.toString(),
 				canvas.width/2, canvas.height/3);
@@ -577,6 +587,20 @@ var restartGame = function (p_no) {
 		text = 'Player 2 Scored!';
 		score_p2 += 1;
 	}
+
+	p1score.textContent = score_p1.toString();
+	p2score.textContent = score_p2.toString();
+	if ("scored" !== p1inst.classList[0]) {
+		canvas.classList.toggle("scored");
+		p1inst.classList.toggle("scored");
+		p2inst.classList.toggle("scored");
+		setTimeout( ()=> {
+			canvas.classList.toggle("scored");
+			p1inst.classList.toggle("scored");
+			p2inst.classList.toggle("scored");
+		}, 600)
+	}
+
 	p1 = new Player(canvas.width*0.2,canvas.height,
 					p1_ctrls,'red',0);
 	p2 = new Player(canvas.width*0.8,canvas.height,

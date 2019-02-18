@@ -4,19 +4,68 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>Head Battle</title>
-    <style>
-    	* { padding: 0; margin: 1; }
-    	canvas { background: #eee; display: block; margin: 0 auto; }
-    	h1 { text-align: center;}
-    </style>
-
+    <title>Headbattle</title>
+    <link rel = "stylesheet"
+    type = "text/css"
+    href = "./style.css" />
+    
 </head>
 
 <body>
-
+    
+<h1>Headbattle</h1>
+<div id="appContainer">  
+<div id="player1" class="instructions">
+    <div class="playerTitle">
+        <img class="playerImg" src="./assets/p1.png" alt='player 1' />
+        <p>Player 1</p>
+    </div>
+    <img src="./assets/wasd.png" alt='WASD layout' />
+    <p> W - jump </p>
+    <p> A, D - left, right </p>
+    <p> S - kick </p>
+    <div class="scoreSection">
+        <p>Score</p>
+        <div class="playerScore">
+            <p id="p1score"></p>
+        </div>
+    </div>
+</div>
 <canvas id="canvasHB" width="1600" height="900"></canvas>
+<div id="player2" class="instructions">
+    <div class="playerTitle">
+        <img class="playerImg" src="./assets/p2.png" alt='player 2' />
+        <p>Player 2</p>
+    </div>
+    <img src="./assets/arrows.png" alt='Arrows layout' />
+    <p> ↑ - jump </p>
+    <p> ←, → - left, right </p>
+    <p> ↓ - kick </p>
+    <div class="scoreSection">
+        <p>Score</p>
+        <div class="playerScore">
+            <p id="p2score"></p>
+        </div>
+    </div>
+</div>
 <script src="headbattle.js"></script>
+</div>
+
+
+<div id="Footer">
+    <p>
+        Site created by <a className="website"
+            target="_blank" rel="noopener noreferrer"
+            href="https://msfstef.github.io/">
+            Stefanos Mousafeiris
+        </a> on Feb 2019.
+    </p>
+    <a className="paypal"
+        target="_blank" rel="noopener noreferrer"
+        href="https://paypal.me/msfstef">
+        Buy me coffee?
+    </a>
+</div> 
 
 </body>
 
