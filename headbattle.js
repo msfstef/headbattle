@@ -395,7 +395,6 @@ Ball.prototype.update = function(players) {
 				this.pos.y = this.last_pos.y.clone();
 				p.pos.x = p.last_pos.x.clone();
 				//p.pos.y = p.last_pos.y.clone();
-				console.log('horizontal collision');
 		}else if (this.coll.check(p.headColl) || 
 			this.coll.check(p.footColl)) {
 			if (this.coll.check(p.headColl)) {
