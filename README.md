@@ -1,5 +1,7 @@
 # headbattle
 
+Vanilla JS game, using some janky collision physics.
+
 Play on:
 https://msfstef.github.io/headbattle/
 
